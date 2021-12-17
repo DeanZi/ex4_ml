@@ -147,7 +147,7 @@ if __name__ == '__main__':
     train_x, test_x = normalize_data(train_x, test_x)
     train_x, train_y, test_x = data_to_tensors(train_x, train_y, test_x)
     data_set_train = TensorDataset(train_x, train_y)
-    train_loader = DataLoader(data_set_train)
+    train_loader = DataLoader(data_set_train, shuffle=True, batch_size=5)
     print('A')
     model_A()
     print('B')
