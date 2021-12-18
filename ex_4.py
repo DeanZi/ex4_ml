@@ -2,9 +2,10 @@ import sys
 import numpy as np
 import torch
 from torch.utils.data import TensorDataset, DataLoader
-import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from models_a_to_d import ModelType1
+from models_e_and_f import ModelType2
 
 
 def normalize_data(train_x, test_x):
@@ -29,80 +30,6 @@ def receive_data(train_x, train_y, test_x):
     return train_x, train_y, test_x
 
 
-class Model_A_to_D(nn.Module):
-    def __init__(self, image_size, use_dropout=False, use_batch_norm=False, batch_norm_before=False):
-        super(Model_A_to_D, self).__init__()
-        self.image_size = image_size
-        self.use_dropout = use_dropout
-        self.use_batch_norm = use_batch_norm
-        self.batch_norm_before = batch_norm_before
-
-        self.fc0 = nn.Linear(image_size, 100)
-        self.fc1 = nn.Linear(100, 50)
-        self.fc2 = nn.Linear(50, 10)
-
-        if self.use_dropout:
-            self.dropout1 = nn.Dropout(0.25)
-            self.dropout2 = nn.Dropout(0.5)
-        if self.use_batch_norm:
-            self.fc0_bn = nn.BatchNorm1d(100)
-            self.fc1_bn = nn.BatchNorm1d(50)
-            self.fc2_bn = nn.BatchNorm1d(10)
-
-    def forward(self, x):
-        x = x.view(-1, self.image_size)
-        if not self.use_batch_norm:
-            x = self.normal_forward(x)
-        elif self.use_batch_norm and self.batch_norm_before:
-            x = self.forward_with_batch_norm_before(x)
-        elif self.use_batch_norm and not self.batch_norm_before:
-            x = self.forward_with_batch_norm_after(x)
-        output = F.log_softmax(x, dim=1)
-        return output
-
-    def normal_forward(self, x):
-        x = F.relu(self.fc0(x))
-        if self.use_dropout:
-            x = self.dropout1(x)
-            x = F.relu(self.fc1(x))
-            x = self.dropout2(x)
-            x = F.relu(self.fc2(x))
-        else:
-            x = F.relu(self.fc1(x))
-            x = F.relu(self.fc2(x))
-        return x
-
-    def forward_with_batch_norm_before(self, x):
-        x = F.relu(self.fc0_bn(self.fc0(x)))
-        if self.use_dropout:
-            x = self.dropout1(x)
-            x = F.relu(self.fc1_bn(self.fc1(x)))
-            x = self.dropout2(x)
-            x = F.relu(self.fc2_bn(self.fc2(x)))
-        else:
-            x = F.relu(self.fc1_bn(self.fc1(x)))
-            x = F.relu(self.fc2_bn(self.fc2(x)))
-        return x
-
-    def forward_with_batch_norm_after(self, x):
-        x = F.relu(self.fc0(x))
-        x = self.fc0_bn(x)
-        if self.use_dropout:
-            x = self.dropout1(x)
-            x = F.relu(self.fc1(x))
-            x = self.fc1_bn(x)
-            x = self.dropout2(x)
-            x = F.relu(self.fc2(x))
-            x = self.fc2_bn(x)
-        else:
-            x = F.relu(self.fc1(x))
-            x = self.fc1_bn(x)
-            x = F.relu(self.fc2(x))
-            x = self.fc2_bn(x)
-
-        return x
-
-
 def train(model, train_loader, optimizer, epoch):
     for e in range(epoch):
         model.train()
@@ -117,29 +44,40 @@ def train(model, train_loader, optimizer, epoch):
                    100. * batch_idx / len(train_loader), loss.item()))
 
 
-def model_A(lr=0.01):
-    model_A = Model_A_to_D(image_size=28 * 28)
-    optimizer = optim.SGD(model_A.parameters(), lr=lr)
-    train(model_A, train_loader, optimizer, 10)
+def model_a(lr=0.01):
+    model = ModelType1(image_size=28 * 28)
+    optimizer = optim.SGD(model.parameters(), lr=lr)
+    train(model, train_loader, optimizer, 10)
 
 
-def model_B(lr=0.01, use_dropout=False, use_batch_norm=False, batch_norm_before=False):
-    model_B = Model_A_to_D(image_size=28 * 28, use_dropout=use_dropout, use_batch_norm=use_batch_norm,
-                           batch_norm_before=batch_norm_before)
-    optimizer = optim.Adam(model_B.parameters(), lr=lr)
-    train(model_B, train_loader, optimizer, 10)
+def model_b(lr=0.01, use_dropout=False, use_batch_norm=False, batch_norm_before=False):
+    model = ModelType1(image_size=28 * 28, use_dropout=use_dropout, use_batch_norm=use_batch_norm,
+                       batch_norm_before=batch_norm_before)
+    optimizer = optim.Adam(model.parameters(), lr=lr)
+    train(model, train_loader, optimizer, 10)
 
 
-def model_C(lr=0.01):
-    model_B(lr, use_dropout=True)
+def model_c(lr=0.01):
+    model_b(lr, use_dropout=True)
 
 
-def model_D(lr=0.01):
+def model_d(lr=0.01):
     print("batch norm before")
-    model_B(lr, use_batch_norm=True, batch_norm_before=True)
+    model_b(lr, use_batch_norm=True, batch_norm_before=True)
     print("batch norm after")
-    model_B(lr, use_batch_norm=True, batch_norm_before=False)
+    model_b(lr, use_batch_norm=True, batch_norm_before=False)
 
+
+def model_e(lr=0.01):
+    model = ModelType2(image_size=28 * 28, model_letter='E')
+    optimizer = optim.Adam(model.parameters(), lr=lr)
+    train(model, train_loader, optimizer, 10)
+
+
+def model_f(lr=0.01):
+    model = ModelType2(image_size=28 * 28, model_letter='F')
+    optimizer = optim.Adam(model.parameters(), lr=lr)
+    train(model, train_loader, optimizer, 10)
 
 
 if __name__ == '__main__':
@@ -149,10 +87,14 @@ if __name__ == '__main__':
     data_set_train = TensorDataset(train_x, train_y)
     train_loader = DataLoader(data_set_train, shuffle=True, batch_size=5)
     print('A')
-    model_A()
+    model_a()
     print('B')
-    model_B()
+    model_b()
     print('C')
-    model_C()
+    model_c()
     print('D')
-    model_D()
+    model_d()
+    print('E')
+    model_e()
+    print('F')
+    model_f()
