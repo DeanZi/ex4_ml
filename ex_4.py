@@ -24,8 +24,8 @@ def data_to_tensors(train_x, train_y, test_x):
 
 
 def receive_data(train_x, train_y, test_x):
-    train_x = np.loadtxt(train_x, max_rows=10)
-    train_y = np.loadtxt(train_y, max_rows=10)
+    train_x = np.loadtxt(train_x)
+    train_y = np.loadtxt(train_y)
     test_x = np.loadtxt(test_x, max_rows=10)
     return train_x, train_y, test_x
 
@@ -46,17 +46,21 @@ def train(model, optimizer, epoch, validate, min_validation_loss=np.inf):
 
         if validate:
             validation_loss = 0.0
+            correct_predictions = 0
             model.eval()
             for data, labels in validation_loader:
                 target = model(data)
                 loss = F.nll_loss(target, labels)
                 validation_loss += loss.item()
+                _, prediction = target.max(1)
+                correct_predictions += (prediction == labels).sum()
 
+            print('\nValidation set: Accuracy: {:.0f}%\n'.format(100. * correct_predictions / len(validation_loader.dataset)))
             print(f'Validation Epoch {e + 1} \t\t Validation Loss: { validation_loss / len(validation_loader)}')
 
-            if min_validation_loss > validation_loss:
-                min_validation_loss = validation_loss
-                torch.save(model.state_dict(), 'saved_model.pth')
+            # if min_validation_loss > validation_loss:
+            #     min_validation_loss = validation_loss
+            #     torch.save(model.state_dict(), 'saved_model.pth')
 
 
 def model_a(lr=0.01, validate=True):
@@ -100,18 +104,18 @@ if __name__ == '__main__':
     train_x, test_x = normalize_data(train_x, test_x)
     train_x, train_y, test_x = data_to_tensors(train_x, train_y, test_x)
     data_set_train = TensorDataset(train_x, train_y)
-    train_set, validation_set = random_split(data_set_train, [8, 2])
+    train_set, validation_set = random_split(data_set_train, [44000, 11000])
     train_loader = DataLoader(train_set, batch_size=2, shuffle=True)
     validation_loader = DataLoader(validation_set)
     print('A')
     model_a()
-    print('B')
-    model_b()
-    print('C')
-    model_c()
-    print('D')
-    model_d()
-    print('E')
-    model_e()
-    print('F')
-    model_f()
+    # print('B')
+    # model_b()
+    # print('C')
+    # model_c()
+    # print('D')
+    # model_d()
+    # print('E')
+    # model_e()
+    # print('F')
+    # model_f()
