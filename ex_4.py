@@ -6,6 +6,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 from models_a_to_d import ModelType1
 from models_e_and_f import ModelType2
+import matplotlib.pyplot as plt
+
 
 
 def normalize_data(train_x, test_x):
@@ -30,7 +32,23 @@ def receive_data(train_x, train_y, test_x):
     return train_x, train_y, test_x
 
 
-def train(model, optimizer, epoch, validate, min_validation_loss=np.inf):
+def plot_model_loss(train_losses, validation_losses, epochs_list):
+    plt.plot(epochs_list, train_losses, color='r', label='train')
+    plt.plot(epochs_list, validation_losses, color='g', label='validation')
+    plt.ylabel('Average loss')
+    plt.xlabel('Epoch')
+    plt.title("Loss per epoch")
+    plt.legend()
+    plt.show()
+
+
+def plot_model_acc():
+    pass
+
+
+def train(model, optimizer, epoch, validate):
+    train_losses = []
+    validation_losses = []
     for e in range(epoch):
         train_loss = 0.0
         model.train()
@@ -43,6 +61,7 @@ def train(model, optimizer, epoch, validate, min_validation_loss=np.inf):
             train_loss += loss.item()
         print('Train Epoch: {} \tLoss: {:.6f}'.format(
             e + 1, train_loss / len(train_loader)))
+        train_losses.append(train_loss / len(train_loader))
 
         if validate:
             validation_loss = 0.0
@@ -57,10 +76,11 @@ def train(model, optimizer, epoch, validate, min_validation_loss=np.inf):
 
             print('\nValidation set: Accuracy: {:.0f}%\n'.format(100. * correct_predictions / len(validation_loader.dataset)))
             print(f'Validation Epoch {e + 1} \t\t Validation Loss: { validation_loss / len(validation_loader)}')
+            validation_losses.append(validation_loss / len(validation_loader))
+    plot_model_loss(train_losses, validation_losses, [i for i in range(1,10+1)])
+    # plot_model_acc()
 
-            # if min_validation_loss > validation_loss:
-            #     min_validation_loss = validation_loss
-            #     torch.save(model.state_dict(), 'saved_model.pth')
+
 
 
 def model_a(lr=0.01, validate=True):
