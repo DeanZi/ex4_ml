@@ -20,14 +20,14 @@ def normalize_data(train_x, test_x):
 def data_to_tensors(train_x, train_y, test_x):
     train_x = torch.from_numpy(train_x).float()
     train_y = torch.from_numpy(train_y).long()
-    test_x = torch.from_numpy(test_x)
+    test_x = torch.from_numpy(test_x).float()
     return train_x, train_y, test_x
 
 
 def receive_data(train_x, train_y, test_x):
     train_x = np.loadtxt(train_x)
     train_y = np.loadtxt(train_y)
-    test_x = np.loadtxt(test_x, max_rows=10)
+    test_x = np.loadtxt(test_x)
     return train_x, train_y, test_x
 
 
@@ -75,7 +75,20 @@ def validate(model, validation_losses, validation_accuracies, train_accuracies, 
         train_accuracies.append(100. * correct_predictions / len(train_loader.dataset))
 
 
-def train(model, optimizer, epoch, with_validation):
+def test(model, test_x):
+    predictions = []
+    model.eval()
+    for data in test_x:
+        target = model(data)
+        _, prediction = target.max(1)
+        predictions.append(prediction)
+    output_file = open(sys.argv[4], 'w')
+    for y in predictions:
+        output_file.write(str(y.item()) + '\n')
+    output_file.close()
+
+
+def train(model, optimizer, epoch, with_validation, with_test=False):
     train_losses = []
     validation_losses = []
     train_accuracies = []
@@ -101,6 +114,9 @@ def train(model, optimizer, epoch, with_validation):
     plot_model_loss(train_losses, validation_losses, [i for i in range(1, 10 + 1)], model)
     plot_model_acc(train_accuracies, validation_accuracies, [i for i in range(1, 10 + 1)], model)
 
+    if with_test:
+        test(model, test_x)
+
 
 def model_a(lr=0.01, with_validation=True):
     model = ModelType1(image_size=28 * 28, model_letter='A')
@@ -108,11 +124,12 @@ def model_a(lr=0.01, with_validation=True):
     train(model, optimizer, 10, with_validation)
 
 
-def model_b(lr=0.01, use_dropout=False, use_batch_norm=False, batch_norm_before=False, with_validation=True, model_letter='B'):
+def model_b(lr=0.01, use_dropout=False, use_batch_norm=False, batch_norm_before=False, with_validation=True,
+            model_letter='B', with_test=False):
     model = ModelType1(image_size=28 * 28, use_dropout=use_dropout, use_batch_norm=use_batch_norm,
                        batch_norm_before=batch_norm_before, model_letter=model_letter)
     optimizer = optim.Adam(model.parameters(), lr=lr)
-    train(model, optimizer, 10, with_validation)
+    train(model, optimizer, 10, with_validation, with_test=with_test)
 
 
 def model_c(lr=0.01, with_validation=True):
@@ -120,10 +137,10 @@ def model_c(lr=0.01, with_validation=True):
 
 
 def model_d(lr=0.01, with_validation=True):
-    print("batch norm before")
-    model_b(lr, use_batch_norm=True, batch_norm_before=True, with_validation=with_validation, model_letter='D')
-    print("batch norm after")
-    model_b(lr, use_batch_norm=True, batch_norm_before=False, with_validation=with_validation, model_letter='D')
+    # print("batch norm before")
+    model_b(lr, use_batch_norm=True, batch_norm_before=True, with_validation=with_validation, model_letter='D', with_test=True)
+    # print("batch norm after")
+    # model_b(lr, use_batch_norm=True, batch_norm_before=False, with_validation=with_validation, model_letter='D')
 
 
 def model_e(lr=0.01, with_validation=True):
@@ -154,9 +171,9 @@ if __name__ == '__main__':
     # print('C')
     # train_loader = DataLoader(train_set, batch_size=1024, shuffle=False)
     # model_c()
-    # print('D')
-    # train_loader = DataLoader(train_set, batch_size=1024, shuffle=False)
-    # model_d()
+    print('D')
+    train_loader = DataLoader(train_set, batch_size=1024, shuffle=True)
+    model_d()
     # print('E')
     # train_loader = DataLoader(train_set, batch_size=1024, shuffle=False)
     # model_e()
