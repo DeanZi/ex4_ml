@@ -3,9 +3,10 @@ import torch.nn.functional as F
 
 
 class ModelType1(nn.Module):
-    def __init__(self, image_size, use_dropout=False, use_batch_norm=False, batch_norm_before=False):
+    def __init__(self, image_size, model_letter, use_dropout=False, use_batch_norm=False, batch_norm_before=False):
         super(ModelType1, self).__init__()
         self.image_size = image_size
+        self.model_letter = model_letter
         self.use_dropout = use_dropout
         self.use_batch_norm = use_batch_norm
         self.batch_norm_before = batch_norm_before
