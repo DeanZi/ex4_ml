@@ -111,8 +111,8 @@ def train(model, optimizer, epoch, with_validation, with_test=False):
             validate(model, validation_losses, validation_accuracies, train_accuracies, e)
             validate(model, validation_losses, validation_accuracies, train_accuracies, e, train_set_validation=True)
 
-    plot_model_loss(train_losses, validation_losses, [i for i in range(1, 10 + 1)], model)
-    plot_model_acc(train_accuracies, validation_accuracies, [i for i in range(1, 10 + 1)], model)
+    # plot_model_loss(train_losses, validation_losses, [i for i in range(1, 10 + 1)], model)
+    # plot_model_acc(train_accuracies, validation_accuracies, [i for i in range(1, 10 + 1)], model)
 
     if with_test:
         test(model, test_x)
@@ -136,7 +136,7 @@ def model_c(lr=0.01, with_validation=True):
     model_b(lr, use_dropout=True, with_validation=with_validation, model_letter='C')
 
 
-def model_d(lr=0.01, with_validation=True):
+def model_d(lr=0.01, with_validation=False):
     # print("batch norm before")
     model_b(lr, use_batch_norm=True, batch_norm_before=True, with_validation=with_validation, model_letter='D', with_test=True)
     # print("batch norm after")
